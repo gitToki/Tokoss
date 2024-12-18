@@ -41,8 +41,8 @@ contract DSCEngine is ReentrancyGuard {
     function RedeemCollateralForDSC() external{}
         
     function DepositCollateral(address tokencollateralAdress, uint256 amountCollateral) external moreThanZero(amountCollateral) isAllowedToken(tokencollateralAdress) nonReentrant{
-
-
+        s_collateralDeposited[msg.sender][tokencollateralAdress] += amountCollateral;
+// error to fix        emit s_collateralDeposited(msg.sender, tokencollateralAdress, amountCollateral);
     }
 
     function RedeemCollateral(address _tokenCollateralAddress, uint256 _amountCollateral) external moreThanZero(_amountCollateral){
