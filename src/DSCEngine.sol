@@ -2,13 +2,15 @@
 pragma solidity ^0.8.0;
 
 import {TokusdStablecoin} from "./TokusdStablecoin.sol";
+import {ReentrancyGuard} from "../lib/openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 
-contract DSCEngine {
+contract DSCEngine is ReentrancyGuard {
     error DSCEngine_ZeroFundsTransaction();
     error DSCEngine_TokenAddressAndPriceFeedNotSameLength();
     error DSCGEngin_TokenNotAllowed();
 
     mapping(address token => address priceFeeds) private s_priceFeeds;
+    mapping(address user => mapping(address token => uint256 amount)) private s_collateralDeposited;
 
     TokusdStablecoin private immutable i_dsc;
 
@@ -37,7 +39,11 @@ contract DSCEngine {
 
     function DepositCollateralAndMintDSC() external{}
     function RedeemCollateralForDSC() external{}
-    function DepositCollateralAndMint() external{}
+        
+    function DepositCollateral(address tokencollateralAdress, uint256 amountCollateral) external moreThanZero(amountCollateral) isAllowedToken(tokencollateralAdress) nonReentrant{
+
+
+    }
 
     function RedeemCollateral(address _tokenCollateralAddress, uint256 _amountCollateral) external moreThanZero(_amountCollateral){
 
