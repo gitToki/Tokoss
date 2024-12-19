@@ -3,16 +3,22 @@ pragma solidity ^0.8.0;
 
 import {TokusdStablecoin} from "./TokusdStablecoin.sol";
 import {ReentrancyGuard} from "../lib/openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
+import {IERC20} from "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 contract DSCEngine is ReentrancyGuard {
     error DSCEngine_ZeroFundsTransaction();
     error DSCEngine_TokenAddressAndPriceFeedNotSameLength();
     error DSCGEngin_TokenNotAllowed();
+    error DSCEngine_TransferFailled();
 
     mapping(address token => address priceFeeds) private s_priceFeeds;
     mapping(address user => mapping(address token => uint256 amount)) private s_collateralDeposited;
 
     TokusdStablecoin private immutable i_dsc;
+
+    event CollateralDeposited(address indexed user, address indexed token, uint256 indexed amount);
+
+
 
     modifier moreThanZero(uint256 amount) {
         if (amount <= 0){
@@ -42,7 +48,11 @@ contract DSCEngine is ReentrancyGuard {
         
     function DepositCollateral(address tokencollateralAdress, uint256 amountCollateral) external moreThanZero(amountCollateral) isAllowedToken(tokencollateralAdress) nonReentrant{
         s_collateralDeposited[msg.sender][tokencollateralAdress] += amountCollateral;
-// error to fix        emit s_collateralDeposited(msg.sender, tokencollateralAdress, amountCollateral);
+        emit CollateralDeposited(msg.sender, tokencollateralAdress, amountCollateral);
+        bool success = IERC20(tokencollateralAdress).transferFrom(msg.sender, address(this), amountCollateral); // Following CEI - Check Effect Interraction
+        if (!success){
+            revert DSCEngine_TransferFailled();
+        }
     }
 
     function RedeemCollateral(address _tokenCollateralAddress, uint256 _amountCollateral) external moreThanZero(_amountCollateral){
