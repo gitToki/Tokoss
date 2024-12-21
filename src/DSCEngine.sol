@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
 import {TokusdStablecoin} from "./TokusdStablecoin.sol";
 import {ReentrancyGuard} from "../lib/openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
@@ -12,6 +12,7 @@ contract DSCEngine is ReentrancyGuard, AggregatorV3Interface {
     error DSCGEngin_TokenNotAllowed();
     error DSCEngine_TransferFailled();
     error DSCEngine_BreakHealthFactor(uint256 healthFactor);
+    error DSCEngine_MintedFailed();
 
     uint256 private constant FEED_PRECISION = 1e10;
     uint256 private constant PRECISION = 1e18;
@@ -20,8 +21,7 @@ contract DSCEngine is ReentrancyGuard, AggregatorV3Interface {
     uint256 private constant MIN_HEALTH_FACTOR = 1;
 
     mapping(address token => address priceFeeds) private s_priceFeeds;
-    mapping(address user => mapping(address token => uint256 amount))
-        private s_collateralDeposited;
+    mapping(address user => mapping(address token => uint256 amount)) private s_collateralDeposited;
     mapping(address user => uint256 amountDscMinted) private s_DSCMinted;
 
     address[] private s_collateralTokens;
@@ -103,8 +103,13 @@ contract DSCEngine is ReentrancyGuard, AggregatorV3Interface {
     function mintDSC(
         uint256 amountDSCToMint
     ) external moreThanZero(amountDSCToMint) nonReentrant {
+
         s_DSCMinted[msg.sender] += amountDSCToMint;
         _revertIfHealthFactorIsBroken(msg.sender);
+         bool minted = i_dsc.mint(msg.sender, amountDSCToMint);
+         if(!minted){
+            revert DSCEngine_MintedFailed();
+         }
     }
 
     function liquidate() external {}

@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
 import {ERC20Burnable, ERC20} from "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import {Ownable} from "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 
 
-abstract contract TokusdStablecoin is ERC20Burnable, Ownable{
+contract TokusdStablecoin is ERC20Burnable, Ownable{
     error TokusdStablecoin_MustBeMoreThen0();
     error TokusdStablecoin_NotEnoughFunds();
     error TokusdStablecoin_NotZeroAddress();
 
     constructor() ERC20("TokusdStablecoin", "DSC")  {}
+
+
     function  burn(uint256 _amount)  public override onlyOwner {
         uint256 balance = balanceOf(msg.sender);
         if (_amount <= 0){
